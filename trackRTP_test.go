@@ -273,7 +273,7 @@ func TestLongRunningWindow(t *testing.T) {
 	}
 }
 
-func TestLongRunningJumps(t *testing.T) {
+func TestLongRunningBackwardDuplicates(t *testing.T) {
 
 	type test struct {
 		aw          uint16
@@ -378,6 +378,90 @@ func TestLongRunningJumps(t *testing.T) {
 			t.Fatalf("%s, test:%d dupSent:%d != dup:%d", t.Name(), i, dupSent, dup)
 		} else {
 			t.Logf("%s i:%d, tc: %v, j:%d, loops:%d, duplicate test succeeded! dup:%d", t.Name(), i, tc, j, loops, dup)
+		}
+	}
+}
+
+func TestLongRunningSkipSend(t *testing.T) {
+
+	type test struct {
+		aw      uint16
+		bw      uint16
+		ab      uint16
+		bb      uint16
+		dl      int
+		start   uint16
+		err     error
+		loops   int64
+		SkipMod int
+		MaxSkip int
+		Len     int
+	}
+
+	debugL := 11
+
+	tests := []test{
+		{10, 10, 10, 10, debugL, 0, nil, 10, 2, 3, 10},
+		{10, 10, 10, 10, debugL, 0, nil, 10, 3, 3, 10},
+		{10, 10, 10, 10, debugL, maxUint16 - 10, nil, 10, 5, 3, 10},
+		{100, 100, 100, 100, debugL, 0, nil, 100, 2, 3, 100},
+		{100, 100, 100, 100, debugL, 0, nil, 100, 3, 3, 100},
+		{100, 100, 100, 100, debugL, maxUint16 - 100, nil, 100, 5, 3, 100},
+		{1000, 1000, 1000, 1000, debugL, 0, nil, 1000, 10, 2, 1000},
+		{1000, 1000, 1000, 1000, debugL, 0, nil, 1000, 20, 3, 1000},
+		{1000, 1000, 1000, 1000, debugL, maxUint16 - 1000, nil, 1000, 50, 10, 1000},
+	}
+
+	if os.Getenv("LONG") != "true" {
+		t.Skip("Skipping long test.  Set 'LONG=true' env var to run this")
+	}
+
+	for i, tc := range tests {
+
+		t.Logf("%s i:%d, tc: %v\n", t.Name(), i, tc)
+
+		tr, err := New(tc.aw, tc.bw, tc.ab, tc.bb, tc.dl)
+		if err != tc.err {
+			t.Fatalf("%s, err:%v != tc.err:%v", t.Name(), err, tc.err)
+		}
+
+		var tax *Taxonomy
+		var e error
+		var loops int64
+		var j uint16 = tc.start
+		var skip int
+		for {
+			if tc.dl > 10 {
+				t.Logf("%s i:%d, tc: %v, j:%d, loops:%d", t.Name(), i, tc, j, loops)
+			}
+			if loops%int64(tc.SkipMod) == 0 && skip < tc.MaxSkip {
+				t.Logf("%s i:%d, loops:%d, j:%d, skip:%d", t.Name(), i, loops, j, skip)
+				skip++
+			} else {
+				tax, e = tr.PacketArrival(j)
+				if e != nil {
+					t.Fatalf("%s, e != nil:%v", t.Name(), e)
+				}
+			}
+
+			j++
+			loops++
+			if loops > tc.loops {
+				t.Logf("loops:%d > tc.Loops:%d, tr.Max():%d, tax.Len:%d, tr.Min():%d", loops, tc.loops, tr.Max(), tax.Len, tr.Min())
+				if tc.dl > 110 {
+					t.Logf("items:%v", tr.itemsDescending())
+				}
+				break
+			}
+
+			if tc.dl > 10 {
+				if loops%int64(maxUint16) == 0 {
+					t.Logf("loops:%d > tc.Loops:%d, tr.Max():%d, tax.Len:%d, tr.Min():%d", loops, tc.loops, tr.Max(), tax.Len, tr.Min())
+				}
+			}
+		}
+		if !reflect.DeepEqual(tax.Len-1, tc.Len-skip) {
+			t.Fatalf("%s, test:%d !reflect.DeepEqual(tax.Len-1:%v, tc.Len:%v), skip:%d", t.Name(), i, tax.Len-1, tc.Len-skip, skip)
 		}
 	}
 }

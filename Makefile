@@ -13,10 +13,14 @@ long:
 	LONG=true go test -v -run TestLongRunningLoop
 
 lw:
-	LONG=true go test -v -run TestLongRunningWindow -test.timeout=30m
+	LONG=true go test -v -run TestLongRunningWindow
+#-test.timeout=30m
 
-j:
-	LONG=true go test -v -run TestLongRunningJumps -test.timeout=30m
+db:
+	LONG=true go test -v -run TestLongRunningBackwardDuplicates
+
+ss:
+	LONG=true go test -v -run TestLongRunningSkipSend
 
 # math tests
 math: l d
