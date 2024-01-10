@@ -81,9 +81,9 @@ const (
 )
 
 type TrackIntToStringMap struct {
-	posMap    map[int]string
-	catMap    map[int]string
-	subCatMap map[int]string
+	PosMap    map[int]string
+	CatMap    map[int]string
+	SubCatMap map[int]string
 }
 
 func NewMaps() *TrackIntToStringMap {
@@ -108,9 +108,9 @@ func NewMaps() *TrackIntToStringMap {
 	sm[SubCategoryJump] = "Jump"
 
 	return &TrackIntToStringMap{
-		posMap:    pm,
-		catMap:    cm,
-		subCatMap: sm,
+		PosMap:    pm,
+		CatMap:    cm,
+		SubCatMap: sm,
 	}
 }
 
