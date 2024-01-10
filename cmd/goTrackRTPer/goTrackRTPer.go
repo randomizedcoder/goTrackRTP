@@ -17,6 +17,7 @@ import (
 
 const (
 	loopsCst = math.MaxInt32
+	randnCst = 10
 
 	debugLevelCst = 11
 
@@ -46,6 +47,7 @@ func main() {
 	go initSignalHandler(cancel)
 
 	loops := flag.Int("loops", loopsCst, "loops")
+	randn := flag.Int("randn", randnCst, "randn")
 
 	version := flag.Bool("version", false, "version")
 
@@ -71,14 +73,24 @@ func main() {
 	fmt.Println("loops:", loops)
 
 	var s uint16
+	var seq uint16
 	for i := 0; i < *loops; i++ {
-		tax, err := tr.PacketArrival(s)
+
+		r := uint16(FastRandN(uint32(*randn)) + 1) // FastRandN can return zero (0)
+		p := FastRandN(2)
+		log.Printf("i:%d, s:%d, p:%d", i, s, p)
+		if p == 1 {
+			log.Printf("i:%d, s:%d, seq:%d", i, s, seq)
+			seq = s - r
+		} else {
+			seq = s + r
+		}
+
+		_, err := tr.PacketArrival(seq)
 		if err != nil {
 			log.Fatal("PacketArrival:", err)
 		}
-		if i > *aw+*bw && tax.Len < 100 {
-			log.Fatalf("tax.Len:%d should be < 100:", tax.Len)
-		}
+
 		s++
 	}
 

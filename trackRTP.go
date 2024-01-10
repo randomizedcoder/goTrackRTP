@@ -80,6 +80,40 @@ const (
 	SubCategoryJump
 )
 
+type TrackIntToStringMap struct {
+	posMap    map[int]string
+	catMap    map[int]string
+	subCatMap map[int]string
+}
+
+func NewMaps() *TrackIntToStringMap {
+
+	pm := make(map[int]string)
+	pm[PositionUnknown] = "Unknown"
+	pm[PositionInit] = "Init"
+	pm[PositionBehind] = "Behind"
+	pm[PositionDuplicate] = "Duplicate"
+
+	cm := make(map[int]string)
+	cm[CategoryUnknown] = "Unknown"
+	cm[CategoryRestart] = "Restart"
+	cm[CategoryBuffer] = "Buffer"
+	cm[CategoryWindow] = "Window"
+
+	sm := make(map[int]string)
+	sm[SubCategoryUnknown] = "Unknown"
+	sm[SubCategoryNext] = "Next"
+	sm[SubCategoryDuplicate] = "Duplicate"
+	sm[SubCategoryAlready] = "Already"
+	sm[SubCategoryJump] = "Jump"
+
+	return &TrackIntToStringMap{
+		posMap:    pm,
+		catMap:    cm,
+		subCatMap: sm,
+	}
+}
+
 // New creates a Tracker
 // aw = ahead window
 // bw = behind window
